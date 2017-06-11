@@ -7,10 +7,11 @@ public class SpawnManager : MonoBehaviour {
 
     private GameObject cue;
 
-    public Object stickPrefab;
+    public Object cuePrefab;
 
     public GameObject SpawnStick(Vector3 position, NetworkHash128 assetId)
     {
+        Debug.Log("spawn object " + position);
         cue.transform.position = position;
         cue.SetActive(true);
         return cue;
@@ -24,18 +25,20 @@ public class SpawnManager : MonoBehaviour {
 
     void Init()
     {
-        cue = (GameObject)Instantiate(stickPrefab, Vector3.zero, Quaternion.identity);
+        Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
+        cue = (GameObject)Instantiate(cuePrefab, new Vector3(cueBall.x + 0.8f, 0.82f, cueBall.z), Quaternion.identity);
     }
     // Use this for initialization
     void Start () {
         Init();
-        NetworkHash128 stickAssetId = GetComponent<NetworkIdentity>().assetId;
-        ClientScene.RegisterSpawnHandler(stickAssetId, SpawnStick, UnspawnStick);
+        NetworkHash128 cueAssetId = cue.GetComponent<NetworkIdentity>().assetId;
+        ClientScene.RegisterSpawnHandler(cueAssetId, SpawnStick, UnspawnStick);
 	}
 	
 	// Update is called once per frame
 	void Update () {
         //NetworkHash128 creatureAssetId = NetworkHash128.Parse("e2656f");
-        //NetworkServer.Spawn(gameObject, creatureAssetId);
+        NetworkHash128 cueAssetId = cue.GetComponent<NetworkIdentity>().assetId;
+        NetworkServer.Spawn(gameObject, cueAssetId);
     }
 }
