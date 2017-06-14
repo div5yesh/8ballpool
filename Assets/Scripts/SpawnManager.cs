@@ -26,7 +26,7 @@ public class SpawnManager : MonoBehaviour {
     void Init()
     {
         Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
-        cue = (GameObject)Instantiate(cuePrefab, new Vector3(cueBall.x + 0.8f, 0.82f, cueBall.z), Quaternion.identity);
+        cue = (GameObject)Instantiate(cuePrefab, new Vector3(cueBall.x + 0.775f, 0.82f, cueBall.z), new Quaternion(0,0,1.76f,180));
     }
     // Use this for initialization
     void Start () {
