@@ -2,13 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityStandardAssets;
 
-public class PlayerMovementScript : MonoBehaviour
+public class PlayerMovementScript : NetworkBehaviour
 {
-    //Rigidbody player;
-
     public float magnitude = 2f;
+    public float timer = 30f;
 
     GameObject cueBall;
     float startTime;
@@ -21,19 +21,15 @@ public class PlayerMovementScript : MonoBehaviour
     {
         cueBall = GameObject.FindWithTag("CueBall");
         initialPosition = transform.position;
-        //player = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        //float x = Input.GetAxis("Horizontal");
-        //float z = Input.GetAxis("Vertical");
-
-        //Vector3 movement = new Vector3(x, 0, z);
-        //Debug.Log(movement);
-        ////gameObject.transform.position += movement;
-        //player.AddForce(movement * force);
+        //if (!isLocalPlayer)
+        //{
+        //    return;
+        //}
 
         var rotation = Input.GetAxis("Horizontal") * Time.deltaTime * 150.0f;
         var power = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
@@ -73,7 +69,6 @@ public class PlayerMovementScript : MonoBehaviour
     {
         if (shooting)
         {
-
             float fracJourney = force / 1.25f;
             Vector3 newPosition = Vector3.Lerp(transform.position, initialPosition, fracJourney);
             transform.position = newPosition;
@@ -82,9 +77,14 @@ public class PlayerMovementScript : MonoBehaviour
 
     private void OnTriggerEnter(Collider collider)
     {
-        if (collider.gameObject.tag == "CueBall")
+        if (shooting)
         {
-            //cueBall.GetComponent<Rigidbody>().AddForce();
+            if (collider.gameObject.tag == "CueBall")
+            {
+                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 500);
+                //NetworkServer.UnSpawn();
+                shooting = false;
+            } 
         }
     }
 }

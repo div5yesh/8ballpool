@@ -5,13 +5,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 
-public class ShootCue : NetworkBehaviour, IPointerClickHandler
+public class ShootCue : MonoBehaviour, IPointerClickHandler
 {
     public void OnPointerClick(PointerEventData eventData)
     {
-        //Vector3 pos = eventData.pointerCurrentRaycast.worldPosition;
-        //int x = Mathf.FloorToInt(pos.x);
-        //int z = Mathf.FloorToInt(pos.z);
+        Vector3 pos = eventData.pointerCurrentRaycast.worldPosition;
+        int x = Mathf.FloorToInt(pos.x);
+        int z = Mathf.FloorToInt(pos.z);
+        Debug.Log("Shoot:" + x + "," + z);
     }
 
     public bool playerTurn = false;
