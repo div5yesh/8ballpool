@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 19080039d0fba684d93a9dffb461ba5a
+timeCreated: 1499801607
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - CuePrefab: {fileID: 100000, guid: dc2b7267bebeb664db07b9e9af5f79a8, type: 2}
+  - cue: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

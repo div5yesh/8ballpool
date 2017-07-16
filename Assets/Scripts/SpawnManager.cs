@@ -5,18 +5,20 @@ using UnityEngine.Networking;
 
 public class SpawnManager : NetworkBehaviour
 {
-
     private GameObject cue;
 
     public Object cuePrefab;
 
     public float timer = 30;
 
-    public bool isPlayerTurn = true;
+    [SyncVar]
+    public int isPlayerTurn = 0;
+
+    public static SpawnManager Instance;
 
     public GameObject SpawnStick(Vector3 position, NetworkHash128 assetId)
     {
-        Debug.Log("spawn object " + position);
+        Debug.Log("spawn object>>>>>>>>>>>>>>>>>>> " + position);
         cue.transform.position = position;
         cue.SetActive(true);
         return cue;
@@ -33,6 +35,11 @@ public class SpawnManager : NetworkBehaviour
         Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
         cue = (GameObject)Instantiate(cuePrefab, new Vector3(cueBall.x + 0.775f, 0.82f, cueBall.z), new Quaternion(0, 0, 1.76f, 180));
     }
+
+    void Awake()
+    {
+        Instance = this;
+    }
     // Use this for initialization
     void Start()
     {
@@ -47,21 +54,26 @@ public class SpawnManager : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (!isServer)
+        if(isLocalPlayer)
         {
             timer -= Time.deltaTime;
-            GetComponentInChildren<TextMesh>().text = Mathf.Round(timer).ToString();
+            GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(timer).ToString();
             //NetworkHash128 creatureAssetId = NetworkHash128.Parse("e2656f");
             //NetworkHash128 cueAssetId = cue.GetComponent<NetworkIdentity>().assetId;
             //NetworkServer.Spawn(cue, cueAssetId); 
-            CmdSpawnPlayer();
+            //if (Network.connections.Length < 0)
+            {
+                Debug.Log("connections" + Network.connections.Length.ToString());
+              //  if ( Network.player == Network.connections[0])
+                    CmdSpawnPlayer();
+            }
         }
     }
 
     [Command]
     public void CmdSpawnPlayer()
     {
-        NetworkServer.SpawnWithClientAuthority(cue, connectionToClient);
+        NetworkServer.SpawnWithClientAuthority(cue,connectionToClient);
     }
 
     [Command]

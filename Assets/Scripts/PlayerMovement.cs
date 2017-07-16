@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityStandardAssets;
 
-public class PlayerMovementScript : NetworkBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     public float magnitude = 2f;
     public float timer = 30f;
@@ -15,7 +15,8 @@ public class PlayerMovementScript : NetworkBehaviour
     bool shooting = false;
     Vector3 initialPosition;
 
-    Vector3 rotationAxis = new Vector3(0, 1, 0);
+    Vector3 ROTATION_AXIS = new Vector3(0, 1, 0);
+
     // Use this for initialization
     void Start()
     {
@@ -38,7 +39,7 @@ public class PlayerMovementScript : NetworkBehaviour
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
         {
             shooting = false;
-            transform.RotateAround(cueBall.transform.position, rotationAxis, rotation);
+            transform.RotateAround(cueBall.transform.position, ROTATION_AXIS, rotation);
         }
 
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
@@ -62,10 +63,14 @@ public class PlayerMovementScript : NetworkBehaviour
             initialPosition = transform.position;
         }
 
-        Shoot(force);
+            RecoilCue(force);
+        //if (cueBall.GetComponent<Rigidbody>().IsSleeping())
+        {
+            //SpawnManager.Instance.isPlayerTurn = SpawnManager.Instance.isPlayerTurn == 0 ? 1 : 0;
+        }
     }
 
-    void Shoot(float force)
+    void RecoilCue(float force)
     {
         if (shooting)
         {
@@ -75,6 +80,7 @@ public class PlayerMovementScript : NetworkBehaviour
         }
     }
 
+    [Server]
     private void OnTriggerEnter(Collider collider)
     {
         if (shooting)
@@ -84,7 +90,7 @@ public class PlayerMovementScript : NetworkBehaviour
                 cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 500);
                 //NetworkServer.UnSpawn();
                 shooting = false;
-            } 
+            }
         }
     }
 }
