@@ -38,6 +38,7 @@ public class NetworkPlayer : NetworkBehaviour
         {
             if (TurnTime <= 0)
             {
+                Debug.Log("upate timer");
                 RpcTurnEnd();
             }
             else
@@ -57,6 +58,7 @@ public class NetworkPlayer : NetworkBehaviour
         Debug.Log("Client Network Player start");
 
         NetworkManager.Instance.RegisterNetworkPlayer(this);
+        OnPlayersReady();
     }
 
     [Client]
@@ -79,7 +81,6 @@ public class NetworkPlayer : NetworkBehaviour
     public void RpcStartTurn()
     {
         TurnTime = 30;
-        OnPlayersReady();
         cueManager.OnTurnStart();
     }
 

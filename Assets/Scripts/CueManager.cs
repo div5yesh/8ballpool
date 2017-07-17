@@ -16,11 +16,13 @@ public class CueManager : NetworkBehaviour {
 
     // Use this for initialization
     void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
+        Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
+        cue = Instantiate(CuePrefab, new Vector3(cueBall.x + 0.775f, 0.82f, cueBall.z), ROTATION);
+        cue.SetActive(false);
+    }
+
+    // Update is called once per frame
+    void Update () {
 		
 	}
 
@@ -33,8 +35,7 @@ public class CueManager : NetworkBehaviour {
 
     //public void Initialize()
     //{
-    //    Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
-    //    cue = Instantiate(CuePrefab, new Vector3(cueBall.x + 0.775f, 0.82f, cueBall.z), ROTATION);
+ 
     //}
 
     public void OnTurnEnd()
