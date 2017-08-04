@@ -80,7 +80,6 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    [Server]
     private void OnTriggerEnter(Collider collider)
     {
         if (shooting)

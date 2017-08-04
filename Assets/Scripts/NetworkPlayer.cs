@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using System;
 
 public class NetworkPlayer : NetworkBehaviour
 {
@@ -9,47 +10,15 @@ public class NetworkPlayer : NetworkBehaviour
     [SerializeField]
     public GameObject CueManagerPrefab;
 
-    CueManager cueManager;
+	public event Action<NetworkPlayer> becameReady;
+
+    public CueManager cueManager;
     private int playerId;
 
     [SerializeField]
     public GameObject TurnTimer;
 
-    float TurnTime = 0;
-
-    // Use this for initialization
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-        UpdateTimer();
-
-    }
-
-    [Server]
-    private void UpdateTimer()
-    {
-        if (NetworkManager.Instance.GetActivePlayer() == this)
-        {
-            if (TurnTime <= 0)
-            {
-                Debug.Log("upate timer");
-                RpcTurnEnd();
-            }
-            else
-            {
-                TurnTime -= Time.deltaTime;
-                GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(TurnTime).ToString();
-            } 
-        }
-    }
-
-    [Client]
+	[Client]
     public override void OnStartClient()
     {
         DontDestroyOnLoad(this);
@@ -58,45 +27,70 @@ public class NetworkPlayer : NetworkBehaviour
         Debug.Log("Client Network Player start");
 
         NetworkManager.Instance.RegisterNetworkPlayer(this);
-        OnPlayersReady();
     }
 
-    [Client]
-    public void OnPlayersReady()
+    public override void OnStartLocalPlayer()
     {
-        if (hasAuthority)
+        base.OnStartLocalPlayer();
+		OnPlayerReady ();
+    }
+
+    public void OnPlayerReady()
+    {
+		if (hasAuthority)
         {
             CmdClientReadyInScene();
         }
     }
 
-    [ClientRpc]
-    void RpcTurnEnd()
-    {
-        cueManager.OnTurnEnd();
-        NetworkManager.Instance.TurnEnd();
-    }
+	public void SetPlayerId(int id){
+		playerId = id;
+	}
+
+	public void SetPlayerReady(){
+		if (hasAuthority) {
+			CmdSetPlayerReady ();
+		}
+	}
+
+	[Command]
+	public void CmdSetPlayerReady(){
+		if (becameReady != null) {
+			becameReady (this);
+		}
+	}
+
+	public void TurnEnd()
+	{
+		RpcTurnEnd (NetworkManager.Instance.ActivePlayer);
+	}
 
     [ClientRpc]
-    public void RpcStartTurn()
+	void RpcTurnEnd(int id)
     {
-        TurnTime = 30;
-        cueManager.OnTurnStart();
+		NetworkManager.Instance.GetPlayerById (id).cueManager.OnTurnEnd ();
+        Debug.Log("turn end" + netId);
     }
 
-    [Command]
+    public void StartTurn()
+    {
+		RpcStartTurn (NetworkManager.Instance.ActivePlayer);
+    }
+
+	[ClientRpc]
+	void RpcStartTurn(int id)
+	{
+		NetworkManager.Instance.GetPlayerById (id).cueManager.OnTurnStart ();
+		Debug.Log("turn start" + netId);
+	}
+
+	[Command]
     private void CmdClientReadyInScene()
     {
-        Debug.Log("CmdClientReadyInScene");
+        Debug.Log("CmdClientReadyInScene"+connectionToClient.connectionId);
         GameObject cueManagerObject = Instantiate(CueManagerPrefab);
         NetworkServer.SpawnWithClientAuthority(cueManagerObject, connectionToClient);
         cueManager = cueManagerObject.GetComponent<CueManager>();
-        cueManager.SetPlayerId(playerId);
-    }
-
-    [Command]
-    public void CmdShoot()
-    {
-
+		cueManager.SetPlayerId (playerId);
     }
 }

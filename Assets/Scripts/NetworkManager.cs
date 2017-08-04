@@ -6,9 +6,6 @@ using UnityEngine.Networking;
 
 public class NetworkManager : UnityEngine.Networking.NetworkManager
 {
-    [SerializeField]
-    public NetworkPlayer NetworkPlayerPrefab;
-
     public static NetworkManager Instance;
 
     int iActivePlayer = -1;
@@ -25,6 +22,11 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
         }
     }
 
+    float MaxTime = 30;
+
+    float TurnTime;
+
+	bool playersReady = false;
 
     List<NetworkPlayer> players;
 
@@ -38,63 +40,97 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
     // Use this for initialization
     void Start()
     {
+        TurnTime = MaxTime;
         players = new List<NetworkPlayer>();
     }
 
     public NetworkPlayer GetActivePlayer()
     {
-        Debug.Log("getactiveplayer::"+ActivePlayer);
-        return players.Count == 2 ? players[ActivePlayer] : null;
+        //Debug.Log("getactiveplayer::"+ActivePlayer);
+        if (players.Count != 2)
+        {
+            return null;
+        }
+        return players[ActivePlayer];
     }
+
+	public NetworkPlayer GetPlayerById(int id){
+		return players [id];
+	}
 
     // Update is called once per frame
     void Update()
     {
-        
+        UpdateTimer();
+    }
+
+    private void UpdateTimer()
+    {
+        if (playersReady)
+        {
+            if (TurnTime <= 0)
+            {
+                Debug.Log("update timer");
+                TurnEnd();
+                TurnTime = MaxTime;
+            }
+            else
+            {
+                if (TurnTime == MaxTime)
+                {
+                    TurnStart();
+                }
+                TurnTime -= Time.deltaTime;
+                GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(TurnTime).ToString();
+            }
+        }
     }
 
     public void TurnEnd()
     {
-        int turn = GetNextTurn();
-        players[turn].RpcStartTurn();
-        ActivePlayer = turn;
+		players[ActivePlayer].TurnEnd();
     }
 
     //Will always change turns
     int GetNextTurn()
     {
-        return (ActivePlayer == 0) ? 1 : 0;
+        return (++ActivePlayer) % players.Count;
     }
 
-    public override void OnClientConnect(NetworkConnection conn)
-    {
-        //base.OnClientConnect(conn);
-        ClientScene.AddPlayer(conn, 0);
-    }
+    //public override void OnClientConnect(NetworkConnection conn)
+    //{
+    //    //base.OnClientConnect(conn);
+    //    ClientScene.AddPlayer(conn, 0);
+    //}
 
-    public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
-    {
-        // Intentionally not calling base here - we want to control the spawning of prefabs
-        Debug.Log("OnServerAddPlayer");
+    //public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
+    //{
+    //    // Intentionally not calling base here - we want to control the spawning of prefabs
+    //    Debug.Log("OnServerAddPlayer");
 
-        NetworkPlayer newPlayer = Instantiate(NetworkPlayerPrefab);
-        DontDestroyOnLoad(newPlayer);
-        NetworkServer.AddPlayerForConnection(conn, newPlayer.gameObject, playerControllerId);
-    }
+    //    NetworkPlayer newPlayer = Instantiate(NetworkPlayerPrefab);
+    //    DontDestroyOnLoad(newPlayer);
+    //    NetworkServer.AddPlayerForConnection(conn, newPlayer.gameObject, playerControllerId);
+    //}
 
     public void RegisterNetworkPlayer(NetworkPlayer player)
     {
         players.Add(player);
+		player.SetPlayerId (players.Count);
+		player.becameReady += SetPlayersReady;
+//		player.OnPlayerReady ();
+    }
 
-        if (players.Count == 2)
-        {
-            int turn = GetNextTurn();
-            players[turn].RpcStartTurn();
-            ActivePlayer = turn;
-        }
-        else
-        {
-            Debug.Log("waiting for players::" + players.Count);
-        }
+	public void SetPlayersReady(NetworkPlayer npl){
+		if (players.Count == 2) {
+			playersReady = true;
+		}
+	}
+
+    public void TurnStart()
+    {
+        int turn = GetNextTurn();
+		ActivePlayer = turn;
+        players[turn].StartTurn();
     }
 }
