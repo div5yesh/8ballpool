@@ -27,10 +27,10 @@ public class PlayerMovement : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (!isLocalPlayer)
-        //{
-        //    return;
-        //}
+        if (!isLocalPlayer)
+        {
+            return;
+        }
 
         var rotation = Input.GetAxis("Horizontal") * Time.deltaTime * 150.0f;
         var power = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
@@ -86,10 +86,16 @@ public class PlayerMovement : NetworkBehaviour
         {
             if (collider.gameObject.tag == "CueBall")
             {
-                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 500);
-                //NetworkServer.UnSpawn();
-                shooting = false;
+				CmdShoot ();
+				shooting = false;
+				GetComponent<NetworkPlayer> ().TurnEnd ();
             }
         }
     }
+
+	[Command]
+	void CmdShoot(){
+		cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 350);
+		//NetworkServer.UnSpawn();
+	}
 }

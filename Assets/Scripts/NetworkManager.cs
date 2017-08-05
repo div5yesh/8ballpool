@@ -7,9 +7,9 @@ using UnityEngine.Networking;
 public class NetworkManager : UnityEngine.Networking.NetworkManager
 {
     public static NetworkManager Instance;
-
-    int iActivePlayer = -1;
-
+//
+    int iActivePlayer = 0;
+//
     public int ActivePlayer
     {
         get
@@ -21,15 +21,15 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
             iActivePlayer = value;
         }
     }
-
+//
     float MaxTime = 30;
 
     float TurnTime;
-
-	bool playersReady = false;
-
+//
+//	bool playersReady = false;
+//
     List<NetworkPlayer> players;
-
+//
     private void Awake()
     {
         if (!Instance)
@@ -37,100 +37,116 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
             Instance = this;
         }
     }
-    // Use this for initialization
+//    // Use this for initialization
     void Start()
     {
-        TurnTime = MaxTime;
+        TurnTime = 0;
         players = new List<NetworkPlayer>();
     }
-
-    public NetworkPlayer GetActivePlayer()
-    {
-        //Debug.Log("getactiveplayer::"+ActivePlayer);
-        if (players.Count != 2)
-        {
-            return null;
-        }
-        return players[ActivePlayer];
-    }
-
-	public NetworkPlayer GetPlayerById(int id){
-		return players [id];
-	}
-
-    // Update is called once per frame
+//
+//    public NetworkPlayer GetActivePlayer()
+//    {
+//        //Debug.Log("getactiveplayer::"+ActivePlayer);
+//        if (players.Count != 2)
+//        {
+//            return null;
+//        }
+//        return players[ActivePlayer];
+//    }
+//
+//	public NetworkPlayer GetPlayerById(int id){
+//		return players [id];
+//	}
+//
+//    // Update is called once per frame
     void Update()
     {
         UpdateTimer();
     }
-
+//
     private void UpdateTimer()
     {
-        if (playersReady)
+        //if (playersReady)
+		if(players.Count==2)
         {
             if (TurnTime <= 0)
             {
                 Debug.Log("update timer");
-                TurnEnd();
+                //TurnEnd();
+				AlterTurns();
                 TurnTime = MaxTime;
             }
             else
             {
                 if (TurnTime == MaxTime)
                 {
-                    TurnStart();
+					//Debug.Log ("turn");
+                    //TurnStart();
                 }
                 TurnTime -= Time.deltaTime;
                 GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(TurnTime).ToString();
             }
         }
     }
+//
+//    public void TurnEnd()
+//    {
+//		players[ActivePlayer].TurnEnd();
+//    }
+//
+	void AlterTurns(){
 
-    public void TurnEnd()
-    {
 		players[ActivePlayer].TurnEnd();
-    }
+		int next = GetNextTurn ();
+		ActivePlayer = next;
+		players [ActivePlayer].TurnStart ();
+	}
 
-    //Will always change turns
+//    //Will always change turns
     int GetNextTurn()
     {
         return (++ActivePlayer) % players.Count;
     }
-
-    //public override void OnClientConnect(NetworkConnection conn)
-    //{
-    //    //base.OnClientConnect(conn);
-    //    ClientScene.AddPlayer(conn, 0);
-    //}
-
-    //public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
-    //{
-    //    // Intentionally not calling base here - we want to control the spawning of prefabs
-    //    Debug.Log("OnServerAddPlayer");
-
-    //    NetworkPlayer newPlayer = Instantiate(NetworkPlayerPrefab);
-    //    DontDestroyOnLoad(newPlayer);
-    //    NetworkServer.AddPlayerForConnection(conn, newPlayer.gameObject, playerControllerId);
-    //}
-
+//
+//    //public override void OnClientConnect(NetworkConnection conn)
+//    //{
+//    //    //base.OnClientConnect(conn);
+//    //    ClientScene.AddPlayer(conn, 0);
+//    //}
+//
+//    //public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
+//    //{
+//    //    // Intentionally not calling base here - we want to control the spawning of prefabs
+//    //    Debug.Log("OnServerAddPlayer");
+//
+//    //    NetworkPlayer newPlayer = Instantiate(NetworkPlayerPrefab);
+//    //    DontDestroyOnLoad(newPlayer);
+//    //    NetworkServer.AddPlayerForConnection(conn, newPlayer.gameObject, playerControllerId);
+//    //}
+//
     public void RegisterNetworkPlayer(NetworkPlayer player)
     {
         players.Add(player);
-		player.SetPlayerId (players.Count);
-		player.becameReady += SetPlayersReady;
+//		player.SetPlayerId (players.Count);
+//		player.becameReady += SetPlayersReady;
 //		player.OnPlayerReady ();
     }
 
-	public void SetPlayersReady(NetworkPlayer npl){
-		if (players.Count == 2) {
-			playersReady = true;
-		}
+	public void DeregisterNetworkPlayer(NetworkPlayer player){
+		players.Remove (player);
+		StopClient ();
 	}
-
-    public void TurnStart()
-    {
-        int turn = GetNextTurn();
-		ActivePlayer = turn;
-        players[turn].StartTurn();
-    }
+//
+//	public void SetPlayersReady(NetworkPlayer npl){
+//		if (players.Count == 2) {
+//			playersReady = true;
+//		}
+//	}
+//
+//    public void TurnStart()
+//    {
+//        int turn = GetNextTurn();
+//		ActivePlayer = turn;
+//        players[turn].StartTurn();
+//    }
 }
