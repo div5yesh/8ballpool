@@ -10,6 +10,8 @@ public class PlayerMovement : NetworkBehaviour
     public float magnitude = 2f;
     public float timer = 30f;
 
+    float speed = 50; // 70 to 5
+
     GameObject cueBall;
     float startTime;
     bool shooting = false;
@@ -95,7 +97,7 @@ public class PlayerMovement : NetworkBehaviour
 
 	[Command]
 	void CmdShoot(){
-		cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 350);
+		cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * speed);
 		//NetworkServer.UnSpawn();
 	}
 }

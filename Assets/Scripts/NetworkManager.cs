@@ -67,7 +67,7 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
     private void UpdateTimer()
     {
         //if (playersReady)
-		if(players.Count==2)
+		//if(players.Count==2)
         {
             if (TurnTime <= 0)
             {
