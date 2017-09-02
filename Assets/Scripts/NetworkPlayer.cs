@@ -7,24 +7,28 @@ using System;
 
 public class NetworkPlayer : NetworkBehaviour
 {
-
+    [SyncVar]
+    public bool isTurn = false;
 
 	    Quaternion ROTATION = Quaternion.Euler(0, 0, 1.76f);
 	    Vector3 ROTATION_AXIS = new Vector3(0, 1, 0);
 
-//    [SerializeField]
-//    public GameObject CueManagerPrefab;
-//
-//	public event Action<NetworkPlayer> becameReady;
-//
-//    public CueManager cueManager;
-//    private int playerId;
-//
-//    [SerializeField]
-//    public GameObject TurnTimer;
+    //    [SerializeField]
+    //    public GameObject CueManagerPrefab;
+    //
+    //	public event Action<NetworkPlayer> becameReady;
+    //
+    //    public CueManager cueManager;
+    //    private int playerId;
+    //
+    //    [SerializeField]
+    //    public GameObject TurnTimer;
 
+    [SyncVar(hook = "UpdateTimeDisplay")]
+    public float time = 15;
 
 	void Start(){
+        GetComponentInChildren<Canvas>().enabled = false;
 		GetComponent<MeshRenderer> ().enabled = false;
 	}
 //
@@ -69,45 +73,71 @@ public class NetworkPlayer : NetworkBehaviour
 //			CmdSetPlayerReady ();
 		}
 	}
-//
-//	[Command]
-//	public void CmdSetPlayerReady(){
-//		if (becameReady != null) {
-//			becameReady (this);
-//		}
-//	}
-//
-	public void TurnEnd()
+
+    private void Update()
+    {
+        if (isTurn)
+        {
+            time -= Time.deltaTime; 
+        }
+    }
+
+    
+    public void UpdateTimeDisplay(float curtime)
+    {
+        GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(curtime).ToString(); 
+    }
+
+    //
+    //	[Command]
+    //	public void CmdSetPlayerReady(){
+    //		if (becameReady != null) {
+    //			becameReady (this);
+    //		}
+    //	}
+    //
+    public void TurnEnd()
 	{
-		GetComponent<MeshRenderer> ().enabled = false;
+        isTurn = false;
+        GetComponent<MeshRenderer> ().enabled = false;
 		GetComponent<PlayerMovement> ().enabled = false;
+        GetComponentInChildren<Canvas>().enabled = false;
 		UnSpawnCue ();
-		//RpcTurnEnd (NetworkManager.Instance.ActivePlayer);
 	}
-//
-//    [ClientRpc]
-//	void RpcTurnEnd(int id)
-//    {
-//		NetworkManager.Instance.GetPlayerById (id).cueManager.OnTurnEnd ();
-//        Debug.Log("turn end" + netId);
-//    }
-//
+    //
+    public void RpcTurnEnd()
+    {
+        isTurn = false;
+        time = 0;
+        GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<PlayerMovement>().enabled = false;
+        GetComponentInChildren<Canvas>().enabled = false;
+        UnSpawnCue();
+        Debug.Log("turn end");
+    }
+    //
     public void TurnStart()
     {
 		SpawnCue ();
 		GetComponent<MeshRenderer> ().enabled = true;
 		GetComponent<PlayerMovement> ().enabled = true;
-		//RpcStartTurn (NetworkManager.Instance.ActivePlayer);
+        GetComponentInChildren<Canvas>().enabled = true;
+        isTurn = true;
     }
-//
-//	[ClientRpc]
-//	void RpcStartTurn(int id)
-//	{
-//		NetworkManager.Instance.GetPlayerById (id).cueManager.OnTurnStart ();
-//		Debug.Log("turn start" + netId);
-//	}
-//
-	void SpawnCue(){
+    //
+    public void RpcTurnStart()
+    {
+        SpawnCue();
+        time = 15;
+        GetComponent<MeshRenderer>().enabled = true;
+        GetComponent<PlayerMovement>().enabled = true;
+        GetComponentInChildren<Canvas>().enabled = true;
+        Debug.Log("turn start");
+        isTurn = true;
+
+    }
+    //
+    void SpawnCue(){
 
 		Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
 		Vector3 position = new Vector3(cueBall.x + 0.775f, 0.82f, cueBall.z);

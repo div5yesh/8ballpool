@@ -7,9 +7,13 @@ using UnityEngine.Networking;
 public class NetworkManager : UnityEngine.Networking.NetworkManager
 {
     public static NetworkManager Instance;
+
+    public Rigidbody[] balls;
 //
     int iActivePlayer = 0;
-//
+    //
+    public bool Shooting = false;
+
     public int ActivePlayer
     {
         get
@@ -22,7 +26,7 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
         }
     }
 //
-    float MaxTime = 30;
+    float MaxTime = 15;
 
     float TurnTime;
 //
@@ -63,29 +67,58 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
     {
         UpdateTimer();
     }
-//
+
+    //public delegate void OnBallStop();
+    //public static event OnBallStop onBallStop;
+    //
+
+    public bool gameon = false;
     private void UpdateTimer()
     {
         //if (playersReady)
-		//if(players.Count==2)
+		if(players.Count == 2 && !gameon)
         {
-            if (TurnTime <= 0)
+            gameon = true;
+            AlterTurns();
+    //        if (TurnTime <= 0)
+    //        {
+    //            Debug.Log("update timer");
+    //            //TurnEnd();
+				//AlterTurns();
+    //        }
+    //        else
+    //        {
+    //            if (TurnTime == MaxTime)
+    //            {
+				//	//Debug.Log ("turn");
+    //                //TurnStart();
+    //            }
+    //            if (!Shooting)
+    //            {
+    //                TurnTime -= Time.deltaTime;
+    //                players[ActivePlayer].time = TurnTime;
+    //                GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(TurnTime).ToString(); 
+    //            }
+    //        }
+        }
+
+        CheckForTurnEnd();
+    }
+
+    public void CheckForTurnEnd()
+    {
+        if (Shooting)
+        {
+            bool tableSleeping = true;
+            foreach (var ball in balls)
             {
-                Debug.Log("update timer");
-                //TurnEnd();
-				AlterTurns();
-                TurnTime = MaxTime;
+                tableSleeping = tableSleeping && ball.IsSleeping();
             }
-            else
+
+            if (tableSleeping)
             {
-                if (TurnTime == MaxTime)
-                {
-					//Debug.Log ("turn");
-                    //TurnStart();
-                }
-                TurnTime -= Time.deltaTime;
-                GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(TurnTime).ToString();
-            }
+                AlterTurns();
+            } 
         }
     }
 //
@@ -96,16 +129,21 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
 //
 	void AlterTurns(){
 
-		players[ActivePlayer].TurnEnd();
-		int next = GetNextTurn ();
-		ActivePlayer = next;
-		players [ActivePlayer].TurnStart ();
-	}
+        if (players.Count > 0)
+        {
+            Shooting = false;
+            players[ActivePlayer].TurnEnd();
+            int next = GetNextTurn();
+            ActivePlayer = next;
+            players[ActivePlayer].TurnStart();
+            TurnTime = MaxTime; 
+        }
+    }
 
-//    //Will always change turns
+    //    //Will always change turns
     int GetNextTurn()
     {
-        return (++ActivePlayer) % players.Count;
+        return (ActivePlayer+1) % players.Count;
     }
 //
 //    //public override void OnClientConnect(NetworkConnection conn)
@@ -126,7 +164,10 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
 //
     public void RegisterNetworkPlayer(NetworkPlayer player)
     {
-        players.Add(player);
+        if (players.Count <= 2)
+        {
+            players.Add(player); 
+        }
 //		player.SetPlayerId (players.Count);
 //		player.becameReady += SetPlayersReady;
 //		player.OnPlayerReady ();
@@ -134,7 +175,6 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
 
 	public void DeregisterNetworkPlayer(NetworkPlayer player){
 		players.Remove (player);
-		StopClient ();
 	}
 //
 //	public void SetPlayersReady(NetworkPlayer npl){
