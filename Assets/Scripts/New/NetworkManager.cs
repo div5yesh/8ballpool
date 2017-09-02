@@ -33,6 +33,7 @@ namespace CPG
             set
             {
                 eGameState = value;
+                OnGameStateChange(eGameState);
             }
         }
 
@@ -61,18 +62,32 @@ namespace CPG
         // Update is called once per frame
         void Update()
         {
-            if (eGameState == GameState.STOP && players.Count == 2)
+            if (GameState == GameState.STOP && players.Count > 0)
             {
                 CheckPlayersReady();
             }
+        }
 
-            if (eGameState == GameState.SHOOTING)
+        void OnGameStateChange(GameState state)
+        {
+            if(state == GameState.SHOOTING)
             {
-                if (CheckForTurnEnd())
-                {
-                    eGameState = GameState.TURN;
-                    AlterTurns();
-                }
+                StartCoroutine(WaitAndCheckForTableSleep());
+
+            }
+        }
+
+        IEnumerator WaitAndCheckForTableSleep()
+        {
+            yield return new WaitForSeconds(2);
+            if (!IsTableSleeping())
+            {
+                StartCoroutine(WaitAndCheckForTableSleep());
+            }
+            else
+            {
+                GameState = GameState.TURN;
+                AlterTurns();
             }
         }
 
@@ -86,12 +101,12 @@ namespace CPG
 
             if (playersReady)
             {
-                eGameState = GameState.START;
+                GameState = GameState.START;
                 players[iActivePlayer].StartGame();
             }
         }
 
-        public bool CheckForTurnEnd()
+        public bool IsTableSleeping()
         {
             bool tableSleeping = true;
             foreach (var ball in balls)
@@ -104,6 +119,7 @@ namespace CPG
 
         public void AlterTurns()
         {
+            players[iActivePlayer].TurnEnd();
             iActivePlayer = (iActivePlayer + 1) % players.Count;
             players[iActivePlayer].TurnStart();
         }

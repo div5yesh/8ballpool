@@ -34,7 +34,7 @@ namespace CPG
                 time -= Time.deltaTime;
                 if(time <= 0)
                 {
-                    TurnEnd();
+                    NetworkManager.Instance.AlterTurns();
                 }
             }
         }
@@ -80,7 +80,6 @@ namespace CPG
         {
             isTurn = false;
             RpcTurnEnd();
-            NetworkManager.Instance.AlterTurns();
         }
 
         [ClientRpc]
