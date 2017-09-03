@@ -23,7 +23,7 @@ namespace CPG
         // Use this for initialization
         void Start()
         {
-            cueManager.playerInput.OnPlayerInput += CmdOnPlayerInput;
+            cueManager.playerInput.OnPlayerInput += OnPlayerInput;
         }
 
         // Update is called once per frame
@@ -48,6 +48,12 @@ namespace CPG
             StartPlayer();
 
             CPG.NetworkManager.Instance.RegisterNetworkPlayer(this);
+        }
+
+        public override void OnStartLocalPlayer()
+        {
+            base.OnStartLocalPlayer();
+            cueManager.SetupLocalPlayer();
         }
 
         [Server]
@@ -103,6 +109,15 @@ namespace CPG
             }
         }
 
+        void OnPlayerInput(PlayerAction action, float amount)
+        {
+            //TODO: also check for localplayer while just shooting, as rotation has player authority
+            //if (isLocalPlayer)
+            {
+                CmdOnPlayerInput(action, amount);
+            }
+        }
+
         [Command]
         void CmdOnPlayerInput(PlayerAction action, float amount)
         {
@@ -112,6 +127,7 @@ namespace CPG
             }
             else
             {
+                cueManager.playerInput.DisableControls();
                 cueManager.cueStick.Shoot(amount);
             }
         }

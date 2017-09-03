@@ -33,9 +33,12 @@ namespace CPG
 
         public void Shoot(float power)
         {
-            cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position).normalized * power, ForceMode.Impulse);
-            cueBall.GetComponent<Rigidbody>().AddTorque(Vector3.zero);
-            NetworkManager.Instance.GameState = GameState.SHOOTING;
+            if (NetworkManager.Instance.GameState != GameState.SHOOTING)
+            {
+                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position).normalized * power, ForceMode.Impulse);
+                cueBall.GetComponent<Rigidbody>().AddTorque(Vector3.zero);
+                NetworkManager.Instance.GameState = GameState.SHOOTING; 
+            }
         }
 
         public void Spawn()

@@ -17,14 +17,25 @@ namespace CPG
         public delegate void PlayerInputCallback(PlayerAction action, float deg);
         public event PlayerInputCallback OnPlayerInput;
 
+        public bool isLocalPlayer = false;
+
         // Use this for initialization
         void Start()
         {
         }
 
+        public void SetupLocalPlayer()
+        {
+            isLocalPlayer = true;
+        }
+
         // Update is called once per frame
         void Update()
         {
+            if (!isLocalPlayer)
+            {
+                return;
+            }
 
             float rotation = 0;
 
@@ -50,6 +61,11 @@ namespace CPG
 
         public void OnShoot()
         {
+            if (!isLocalPlayer)
+            {
+                return;
+            }
+
             float power = GetComponentInChildren<Slider>().value;
             OnPlayerInput(PlayerAction.SHOOT, power);
         }

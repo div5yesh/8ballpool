@@ -10,6 +10,8 @@ namespace CPG
 
         public PlayerControls playerInput;
 
+         bool isLocalPlayer = false;
+
         // Use this for initialization
         void Start()
         {
@@ -21,18 +23,29 @@ namespace CPG
 
         }
 
+        public void SetupLocalPlayer()
+        {
+            cueStick.GetComponent<MeshRenderer>().material.color = Color.blue;
+            isLocalPlayer = true;
+            playerInput.SetupLocalPlayer();
+        }
+
         public void TurnStart()
         {
             cueStick.Spawn();
-            playerInput.EnableControls();
+            if (isLocalPlayer)
+            {
+                playerInput.EnableControls(); 
+            }
         }
-
-        
 
         public void TurnEnd()
         {
             cueStick.Unspawn();
-            playerInput.DisableControls();
+            if (isLocalPlayer)
+            {
+                playerInput.DisableControls(); 
+            }
         }
     } 
 }
