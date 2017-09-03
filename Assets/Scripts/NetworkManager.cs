@@ -31,8 +31,6 @@ namespace CPG
 
         public static NetworkManager Instance;
 
-        public Rigidbody[] balls;
-
         GameState eGameState = GameState.STOP;
         public GameState GameState
         {
@@ -91,7 +89,7 @@ namespace CPG
         IEnumerator WaitAndCheckForTableSleep()
         {
             yield return new WaitForSeconds(2);
-            if (!IsTableSleeping())
+            if (!TableManager.Instance.IsTableSleeping())
             {
                 StartCoroutine(WaitAndCheckForTableSleep());
             }
@@ -115,17 +113,6 @@ namespace CPG
                 GameState = GameState.START;
                 players[iActivePlayer].StartGame();
             }
-        }
-
-        public bool IsTableSleeping()
-        {
-            bool tableSleeping = true;
-            foreach (var ball in balls)
-            {
-                tableSleeping = tableSleeping && ball.IsSleeping();
-            }
-
-            return tableSleeping;
         }
 
         public void AlterTurns()
