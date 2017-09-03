@@ -10,7 +10,7 @@ namespace CPG
 
         public GameObject[] balls;
 
-        public GameObject cueBall;
+        public Rigidbody cueBall;
 
         private void Awake()
         {
@@ -23,7 +23,7 @@ namespace CPG
         // Use this for initialization
         void Start()
         {
-            cueBall = GameObject.FindGameObjectWithTag("CueBall");
+            cueBall = GameObject.FindGameObjectWithTag("CueBall").GetComponent<Rigidbody>();
         }
 
         // Update is called once per frame
@@ -47,7 +47,10 @@ namespace CPG
                 tableSleeping = tableSleeping && ball.GetComponent<Rigidbody>().IsSleeping();
             }
 
-            tableSleeping = tableSleeping && cueBall.GetComponent<Rigidbody>().IsSleeping();
+            if(Vector3.Distance(cueBall.velocity, Vector3.zero)>0.005)
+            {
+                tableSleeping = false;
+            }
 
             return tableSleeping;
         }
