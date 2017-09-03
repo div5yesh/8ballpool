@@ -188,14 +188,6 @@ namespace CPG
             base.OnMatchCreate(success, extendedInfo, matchInfo);
             Debug.Log("OnMatchCreate"+success+matchInfo.networkId);
             id = matchInfo.networkId.ToString();
-            //if (success)
-            //{
-            //    state = NetworkState.InLobby;
-            //}
-            //else
-            //{
-            //    state = NetworkState.Inactive;
-            //}
 
             // Fire callback
             if (NextMatchCreatedCallback != null)
@@ -203,11 +195,6 @@ namespace CPG
                 NextMatchCreatedCallback(success, matchInfo);
                 NextMatchCreatedCallback = null;
             }
-
-            //MatchInfo hostInfo = matchInfo;
-            //NetworkServer.Listen(hostInfo, 9000);
-
-            //StartHost(hostInfo);
 
             // Fire event
             if (matchCreated != null)
@@ -227,17 +214,6 @@ namespace CPG
         {
             base.OnMatchJoined(success, extendedInfo, matchInfo);
             Debug.Log("OnMatchJoined"+matchInfo.networkId);
-
-            //if (success)
-            //{
-            //    state = NetworkState.InLobby;
-            //}
-            //else
-            //{
-            //    state = NetworkState.Pregame;
-            //}
-
-            //StartClient(matchInfo);
 
             // Fire callback
             if (NextMatchCreatedCallback != null)
