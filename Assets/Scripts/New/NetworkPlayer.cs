@@ -27,12 +27,13 @@ namespace CPG
         }
 
         // Update is called once per frame
+        [Server]
         void Update()
         {
             if (isTurn && NetworkManager.Instance.GameState != GameState.SHOOTING)
             {
                 time -= Time.deltaTime;
-                if(time <= 0)
+                if (time <= 0)
                 {
                     NetworkManager.Instance.AlterTurns();
                 }
@@ -113,23 +114,21 @@ namespace CPG
         {
             //TODO: also check for localplayer while just shooting, as rotation has player authority
             //if (isLocalPlayer)
+            if (action == PlayerAction.SHOOT)
             {
                 CmdOnPlayerInput(action, amount);
+            }
+            else
+            {
+                cueManager.cueStick.RotateCueStick(amount);
             }
         }
 
         [Command]
         void CmdOnPlayerInput(PlayerAction action, float amount)
         {
-            if (action == PlayerAction.ROTATE)
-            {
-                cueManager.cueStick.RotateCueStick(amount);
-            }
-            else
-            {
-                cueManager.playerInput.DisableControls();
-                cueManager.cueStick.Shoot(amount);
-            }
+            cueManager.playerInput.DisableControls();
+            cueManager.cueStick.Shoot(amount);
         }
 
         public void UpdateTimeDisplay(float curtime)
@@ -137,5 +136,5 @@ namespace CPG
             GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = "Player " +
                 (CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " + Mathf.Round(curtime).ToString();
         }
-    } 
+    }
 }
