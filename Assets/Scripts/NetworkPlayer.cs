@@ -2,160 +2,139 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityRandom = UnityEngine.Random;
-using System;
+using UnityEngine.UI;
 
-public class NetworkPlayer : NetworkBehaviour
+namespace CPG
 {
-    [SyncVar]
-    public bool isTurn = false;
-
-	    Quaternion ROTATION = Quaternion.Euler(0, 0, 1.76f);
-	    Vector3 ROTATION_AXIS = new Vector3(0, 1, 0);
-
-    //    [SerializeField]
-    //    public GameObject CueManagerPrefab;
-    //
-    //	public event Action<NetworkPlayer> becameReady;
-    //
-    //    public CueManager cueManager;
-    //    private int playerId;
-    //
-    //    [SerializeField]
-    //    public GameObject TurnTimer;
-
-    [SyncVar(hook = "UpdateTimeDisplay")]
-    public float time = 15;
-
-	void Start(){
-        GetComponentInChildren<Canvas>().enabled = false;
-		GetComponent<MeshRenderer> ().enabled = false;
-	}
-//
-	[Client]
-    public override void OnStartClient()
+    public class NetworkPlayer : NetworkBehaviour
     {
-        DontDestroyOnLoad(this);
 
-        base.OnStartClient();
-        Debug.Log("Client Network Player start");
+        [SyncVar(hook = "OnTurnChange")]
+        public bool isTurn = false;
 
-        NetworkManager.Instance.RegisterNetworkPlayer(this);
-    }
+        [SyncVar(hook = "UpdateTimeDisplay")]
+        public float time = 15;
 
-	public override void OnNetworkDestroy ()
-	{
-		base.OnNetworkDestroy ();
-		NetworkManager.Instance.DeregisterNetworkPlayer(this);
-	}
+        public CueManager cueManager;
 
-//
-//    public override void OnStartLocalPlayer()
-//    {
-//        base.OnStartLocalPlayer();
-//		OnPlayerReady ();
-//    }
-//
-//    public void OnPlayerReady()
-//    {
-//		if (hasAuthority)
-//        {
-//            CmdClientReadyInScene();
-//        }
-//    }
-//
-//	public void SetPlayerId(int id){
-//		playerId = id;
-//	}
-//
-	public void SetPlayerReady(){
-		if (hasAuthority) {
-//			CmdSetPlayerReady ();
-		}
-	}
+        [SyncVar]
+        public bool ready = false;
 
-    private void Update()
-    {
-        if (isTurn)
+        // Use this for initialization
+        void Start()
         {
-            time -= Time.deltaTime; 
+            cueManager.playerInput.OnPlayerInput += OnPlayerInput;
+        }
+
+        // Update is called once per frame
+        [Server]
+        void Update()
+        {
+            if (isTurn && NetworkManager.Instance.GameState != GameState.SHOOTING)
+            {
+                time -= Time.deltaTime;
+                if (time <= 0)
+                {
+                    NetworkManager.Instance.AlterTurns();
+                }
+            }
+        }
+
+        public override void OnStartClient()
+        {
+            DontDestroyOnLoad(this);
+
+            base.OnStartClient();
+            Debug.Log("Client Network Player start");
+            StartPlayer();
+
+            CPG.NetworkManager.Instance.RegisterNetworkPlayer(this);
+        }
+
+        public override void OnStartLocalPlayer()
+        {
+            base.OnStartLocalPlayer();
+            cueManager.SetupLocalPlayer();
+        }
+
+        [Server]
+        public void StartPlayer()
+        {
+            ready = true;
+        }
+
+        public void StartGame()
+        {
+            TurnStart();
+        }
+
+        [Server]
+        public void TurnStart()
+        {
+            isTurn = true;
+            time = 15;
+            RpcTurnStart();
+        }
+
+        [ClientRpc]
+        void RpcTurnStart()
+        {
+            cueManager.TurnStart();
+        }
+
+        [Server]
+        public void TurnEnd()
+        {
+            isTurn = false;
+            RpcTurnEnd();
+        }
+
+        [ClientRpc]
+        void RpcTurnEnd()
+        {
+            cueManager.TurnEnd();
+        }
+
+        public override void OnNetworkDestroy()
+        {
+            base.OnNetworkDestroy();
+            CPG.NetworkManager.Instance.DeregisterNetworkPlayer(this);
+        }
+
+        public void OnTurnChange(bool turn)
+        {
+            if (isLocalPlayer)
+            {
+                //play turn sound
+                //playerControlPanel.GetComponentInChildren<Button>().enabled = turn; 
+            }
+        }
+
+        void OnPlayerInput(PlayerAction action, float amount)
+        {
+            //TODO: also check for localplayer while just shooting, as rotation has player authority
+            //if (isLocalPlayer)
+            if (action == PlayerAction.SHOOT)
+            {
+                CmdOnPlayerInput(action, amount);
+            }
+            else
+            {
+                cueManager.cueStick.RotateCueStick(amount);
+            }
+        }
+
+        [Command]
+        void CmdOnPlayerInput(PlayerAction action, float amount)
+        {
+            cueManager.playerInput.DisableControls();
+            cueManager.cueStick.Shoot(amount);
+        }
+
+        public void UpdateTimeDisplay(float curtime)
+        {
+            GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = "Player " +
+                (CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " + Mathf.Round(curtime).ToString();
         }
     }
-
-    
-    public void UpdateTimeDisplay(float curtime)
-    {
-        GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(curtime).ToString(); 
-    }
-
-    //
-    //	[Command]
-    //	public void CmdSetPlayerReady(){
-    //		if (becameReady != null) {
-    //			becameReady (this);
-    //		}
-    //	}
-    //
-    public void TurnEnd()
-	{
-        isTurn = false;
-        GetComponent<MeshRenderer> ().enabled = false;
-		GetComponent<PlayerMovement> ().enabled = false;
-        GetComponentInChildren<Canvas>().enabled = false;
-		UnSpawnCue ();
-	}
-    //
-    public void RpcTurnEnd()
-    {
-        isTurn = false;
-        time = 0;
-        GetComponent<MeshRenderer>().enabled = false;
-        GetComponent<PlayerMovement>().enabled = false;
-        GetComponentInChildren<Canvas>().enabled = false;
-        UnSpawnCue();
-        Debug.Log("turn end");
-    }
-    //
-    public void TurnStart()
-    {
-		SpawnCue ();
-		GetComponent<MeshRenderer> ().enabled = true;
-		GetComponent<PlayerMovement> ().enabled = true;
-        GetComponentInChildren<Canvas>().enabled = true;
-        isTurn = true;
-    }
-    //
-    public void RpcTurnStart()
-    {
-        SpawnCue();
-        time = 15;
-        GetComponent<MeshRenderer>().enabled = true;
-        GetComponent<PlayerMovement>().enabled = true;
-        GetComponentInChildren<Canvas>().enabled = true;
-        Debug.Log("turn start");
-        isTurn = true;
-
-    }
-    //
-    void SpawnCue(){
-
-		Vector3 cueBall = GameObject.FindWithTag("CueBall").transform.position;
-		Vector3 position = new Vector3(cueBall.x + 0.775f, 0.82f, cueBall.z);
-		transform.SetPositionAndRotation(position, ROTATION);
-		transform.RotateAround(cueBall, ROTATION_AXIS, UnityRandom.Range(0, 360));
-	}
-
-	void UnSpawnCue(){
-		transform.position = Vector3.zero;
-	}
-
-//	[Command]
-//    private void CmdClientReadyInScene()
-//    {
-//        Debug.Log("CmdClientReadyInScene"+connectionToClient.connectionId);
-//        GameObject cueManagerObject = Instantiate(CueManagerPrefab);
-//        NetworkServer.SpawnWithClientAuthority(cueManagerObject, connectionToClient);
-//        cueManager = cueManagerObject.GetComponent<CueManager>();
-//		cueManager.SetPlayerId (playerId);
-//    }
 }

@@ -3,111 +3,121 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Networking.Match;
+using UnityEngine.Networking.Types;
+using UnityEngine.SceneManagement;
 
-public class NetworkManager : UnityEngine.Networking.NetworkManager
+namespace CPG
 {
-    public static NetworkManager Instance;
-
-    public Rigidbody[] balls;
-//
-    int iActivePlayer = 0;
-    //
-    public bool Shooting = false;
-
-    public int ActivePlayer
+    public enum GameState
     {
-        get
-        {
-            return iActivePlayer;
-        }
-        set
-        {
-            iActivePlayer = value;
-        }
-    }
-//
-    float MaxTime = 15;
-
-    float TurnTime;
-//
-//	bool playersReady = false;
-//
-    List<NetworkPlayer> players;
-//
-    private void Awake()
-    {
-        if (!Instance)
-        {
-            Instance = this;
-        }
-    }
-//    // Use this for initialization
-    void Start()
-    {
-        TurnTime = 0;
-        players = new List<NetworkPlayer>();
-    }
-//
-//    public NetworkPlayer GetActivePlayer()
-//    {
-//        //Debug.Log("getactiveplayer::"+ActivePlayer);
-//        if (players.Count != 2)
-//        {
-//            return null;
-//        }
-//        return players[ActivePlayer];
-//    }
-//
-//	public NetworkPlayer GetPlayerById(int id){
-//		return players [id];
-//	}
-//
-//    // Update is called once per frame
-    void Update()
-    {
-        UpdateTimer();
+        START,
+        STOP,
+        PAUSE,
+        WAITING,
+        TURN,
+        SHOOTING
     }
 
-    //public delegate void OnBallStop();
-    //public static event OnBallStop onBallStop;
-    //
-
-    public bool gameon = false;
-    private void UpdateTimer()
+    public class NetworkManager : UnityEngine.Networking.NetworkManager
     {
-        //if (playersReady)
-		if(players.Count == 2 && !gameon)
+        public event Action<bool, MatchInfo> matchCreated;
+
+        public event Action<bool, MatchInfo> matchJoined;
+
+        private Action<bool, MatchInfo> NextMatchCreatedCallback;
+
+        List<NetworkPlayer> players;
+
+        public static NetworkManager Instance;
+
+        public Rigidbody[] balls;
+
+        GameState eGameState = GameState.STOP;
+        public GameState GameState
         {
-            gameon = true;
-            AlterTurns();
-    //        if (TurnTime <= 0)
-    //        {
-    //            Debug.Log("update timer");
-    //            //TurnEnd();
-				//AlterTurns();
-    //        }
-    //        else
-    //        {
-    //            if (TurnTime == MaxTime)
-    //            {
-				//	//Debug.Log ("turn");
-    //                //TurnStart();
-    //            }
-    //            if (!Shooting)
-    //            {
-    //                TurnTime -= Time.deltaTime;
-    //                players[ActivePlayer].time = TurnTime;
-    //                GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = Mathf.Round(TurnTime).ToString(); 
-    //            }
-    //        }
+            get
+            {
+                return eGameState;
+            }
+            set
+            {
+                eGameState = value;
+                OnGameStateChange(eGameState);
+            }
         }
 
-        CheckForTurnEnd();
-    }
+        int iActivePlayer = 0;
+        public int ActivePlayer
+        {
+            get
+            {
+                return iActivePlayer;
+            }
+        }
 
-    public void CheckForTurnEnd()
-    {
-        if (Shooting)
+        private void Awake()
+        {
+            if (!Instance)
+            {
+                Instance = this;
+            }
+        }
+        // Use this for initialization
+        void Start()
+        {
+            players = new List<NetworkPlayer>();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        // Update is called once per frame
+        void Update()
+        {
+            if (GameState == GameState.STOP && players.Count == 2)
+            {
+                CheckPlayersReady();
+            }
+        }
+
+        void OnGameStateChange(GameState state)
+        {
+            if(state == GameState.SHOOTING)
+            {
+                StartCoroutine(WaitAndCheckForTableSleep());
+
+            }
+        }
+
+        IEnumerator WaitAndCheckForTableSleep()
+        {
+            yield return new WaitForSeconds(2);
+            if (!IsTableSleeping())
+            {
+                StartCoroutine(WaitAndCheckForTableSleep());
+            }
+            else
+            {
+                GameState = GameState.TURN;
+                AlterTurns();
+            }
+        }
+
+        void CheckPlayersReady()
+        {
+            bool playersReady = true;
+            foreach (var player in players)
+            {
+                playersReady &= player.ready;
+            }
+
+            if (playersReady)
+            {
+                GameState = GameState.START;
+                players[iActivePlayer].StartGame();
+            }
+        }
+
+        public bool IsTableSleeping()
         {
             bool tableSleeping = true;
             foreach (var ball in balls)
@@ -115,78 +125,132 @@ public class NetworkManager : UnityEngine.Networking.NetworkManager
                 tableSleeping = tableSleeping && ball.IsSleeping();
             }
 
-            if (tableSleeping)
+            return tableSleeping;
+        }
+
+        public void AlterTurns()
+        {
+            players[iActivePlayer].TurnEnd();
+            iActivePlayer = (iActivePlayer + 1) % players.Count;
+            players[iActivePlayer].TurnStart();
+        }
+
+        public void RegisterNetworkPlayer(NetworkPlayer player)
+        {
+            if (players.Count <= 2)
             {
-                AlterTurns();
-            } 
+                players.Add(player);
+            }
         }
-    }
-//
-//    public void TurnEnd()
-//    {
-//		players[ActivePlayer].TurnEnd();
-//    }
-//
-	void AlterTurns(){
 
-        if (players.Count > 0)
+        public void DeregisterNetworkPlayer(NetworkPlayer player)
         {
-            Shooting = false;
-            players[ActivePlayer].TurnEnd();
-            int next = GetNextTurn();
-            ActivePlayer = next;
-            players[ActivePlayer].TurnStart();
-            TurnTime = MaxTime; 
+            players.Remove(player);
         }
-    }
 
-    //    //Will always change turns
-    int GetNextTurn()
-    {
-        return (ActivePlayer+1) % players.Count;
-    }
-//
-//    //public override void OnClientConnect(NetworkConnection conn)
-//    //{
-//    //    //base.OnClientConnect(conn);
-//    //    ClientScene.AddPlayer(conn, 0);
-//    //}
-//
-//    //public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
-//    //{
-//    //    // Intentionally not calling base here - we want to control the spawning of prefabs
-//    //    Debug.Log("OnServerAddPlayer");
-//
-//    //    NetworkPlayer newPlayer = Instantiate(NetworkPlayerPrefab);
-//    //    DontDestroyOnLoad(newPlayer);
-//    //    NetworkServer.AddPlayerForConnection(conn, newPlayer.gameObject, playerControllerId);
-//    //}
-//
-    public void RegisterNetworkPlayer(NetworkPlayer player)
-    {
-        if (players.Count <= 2)
+        public void CreateOrJoin(string gameName, Action<bool, MatchInfo> onCreate)
         {
-            players.Add(player); 
+            StartMatchMaker();
+            NextMatchCreatedCallback = onCreate;
+            matchMaker.ListMatches(0, 10, "poolgame", true, 0, 0, OnMatchList);
         }
-//		player.SetPlayerId (players.Count);
-//		player.becameReady += SetPlayersReady;
-//		player.OnPlayerReady ();
-    }
 
-	public void DeregisterNetworkPlayer(NetworkPlayer player){
-		players.Remove (player);
-	}
-//
-//	public void SetPlayersReady(NetworkPlayer npl){
-//		if (players.Count == 2) {
-//			playersReady = true;
-//		}
-//	}
-//
-//    public void TurnStart()
-//    {
-//        int turn = GetNextTurn();
-//		ActivePlayer = turn;
-//        players[turn].StartTurn();
-//    }
+        public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if(scene.name == "GameScene")
+            {
+                NetworkServer.SpawnObjects();
+            }
+        }
+
+        public override void OnMatchList(bool success, string extendedInfo, List<MatchInfoSnapshot> matches)
+        {
+            Debug.Log("Matches:" + matches.Count);
+            if (success && matches.Count > 0)
+            {
+                Debug.Log(matches[0].name+matches[0].networkId);
+                id = matches[0].networkId.ToString();
+                matchMaker.JoinMatch(matches[0].networkId, string.Empty, string.Empty, string.Empty, 0, 0, OnMatchJoined);
+            }
+            else
+            {
+                CreateMatch("poolgame");
+            }
+        }
+
+        public void CreateMatch(string matchName)
+        {
+            matchMaker.CreateMatch(matchName, 2, true, string.Empty, string.Empty, string.Empty, 0, 0, OnMatchCreate);
+        }
+
+        public override void OnMatchCreate(bool success, string extendedInfo, MatchInfo matchInfo)
+        {
+            base.OnMatchCreate(success, extendedInfo, matchInfo);
+            Debug.Log("OnMatchCreate"+success+matchInfo.networkId);
+            id = matchInfo.networkId.ToString();
+            //if (success)
+            //{
+            //    state = NetworkState.InLobby;
+            //}
+            //else
+            //{
+            //    state = NetworkState.Inactive;
+            //}
+
+            // Fire callback
+            if (NextMatchCreatedCallback != null)
+            {
+                NextMatchCreatedCallback(success, matchInfo);
+                NextMatchCreatedCallback = null;
+            }
+
+            //MatchInfo hostInfo = matchInfo;
+            //NetworkServer.Listen(hostInfo, 9000);
+
+            //StartHost(hostInfo);
+
+            // Fire event
+            if (matchCreated != null)
+            {
+                matchCreated(success, matchInfo);
+            }
+        }
+
+        public string id = "";
+
+        private void OnGUI()
+        {
+            GUILayout.Label(id.ToString());
+        }
+
+        public override void OnMatchJoined(bool success, string extendedInfo, MatchInfo matchInfo)
+        {
+            base.OnMatchJoined(success, extendedInfo, matchInfo);
+            Debug.Log("OnMatchJoined"+matchInfo.networkId);
+
+            //if (success)
+            //{
+            //    state = NetworkState.InLobby;
+            //}
+            //else
+            //{
+            //    state = NetworkState.Pregame;
+            //}
+
+            //StartClient(matchInfo);
+
+            // Fire callback
+            if (NextMatchCreatedCallback != null)
+            {
+                NextMatchCreatedCallback(success, matchInfo);
+                NextMatchCreatedCallback = null;
+            }
+
+            // Fire event
+            if (matchJoined != null)
+            {
+                matchJoined(success, matchInfo);
+            }
+        }
+    }
 }
