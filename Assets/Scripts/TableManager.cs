@@ -47,7 +47,7 @@ namespace CPG
                 tableSleeping = tableSleeping && ball.GetComponent<Rigidbody>().IsSleeping();
             }
 
-            if(Vector3.Distance(cueBall.velocity, Vector3.zero)>0.005)
+            if(cueBall.velocity.magnitude > 0.010)
             {
                 tableSleeping = false;
             }
