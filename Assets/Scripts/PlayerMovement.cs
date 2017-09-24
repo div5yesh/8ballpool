@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityStandardAssets;
+//using UnityStandardAssets;
 
 public class PlayerMovement : NetworkBehaviour
 {
@@ -87,7 +87,7 @@ public class PlayerMovement : NetworkBehaviour
         {
             if (collider.gameObject.tag == "CueBall")
             {
-                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 500);
+                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position) * 1000);
                 //NetworkServer.UnSpawn();
                 shooting = false;
             }
