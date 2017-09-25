@@ -12,8 +12,6 @@ namespace CPG
 
         GameObject cueBall;
 
-        float power = 20;
-
         // Use this for initialization
         void Start()
         {
@@ -35,7 +33,7 @@ namespace CPG
         {
             if (NetworkManager.Instance.GameState != GameState.SHOOTING)
             {
-                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position).normalized * power, ForceMode.Impulse);
+                cueBall.GetComponent<Rigidbody>().AddForce((cueBall.transform.position - transform.position).normalized * power);
                 cueBall.GetComponent<Rigidbody>().AddTorque(Vector3.zero);
                 NetworkManager.Instance.GameState = GameState.SHOOTING; 
             }
