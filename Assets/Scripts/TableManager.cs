@@ -44,16 +44,20 @@ namespace CPG
             bool tableSleeping = true;
             foreach (var ball in balls)
             {
+                if(ball.GetComponent<Rigidbody>().velocity.magnitude < 0.02)
+                {
+                    ball.GetComponent<Rigidbody>().Sleep();
+                }
                 tableSleeping = tableSleeping && ball.GetComponent<Rigidbody>().IsSleeping();
             }
 
+            Debug.Log(cueBall.velocity.magnitude + tableSleeping.ToString());
             if (cueBall.velocity.magnitude > 0.02)
             {
-                Debug.Log(cueBall.velocity.magnitude + tableSleeping.ToString());
                 tableSleeping = false;
             }
             else {
-                cueBall.velocity = Vector3.zero;
+                cueBall.Sleep();
             }
 
             return tableSleeping;
