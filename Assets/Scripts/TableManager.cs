@@ -10,7 +10,7 @@ namespace CPG
 
         public GameObject[] balls;
 
-        public Rigidbody cueBall;
+        Rigidbody cueBall;
 
         private void Awake()
         {
