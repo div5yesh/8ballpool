@@ -65,5 +65,9 @@ namespace CPG
 //        Speed = (transform.position - lastPosition).magnitude / Time.deltaTime * 3.6f;
 //        lastPosition = transform.position;
 		}
+
+		void OnDestroy(){
+			
+		}
 	}
 }

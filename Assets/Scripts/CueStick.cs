@@ -20,7 +20,7 @@ namespace CPG
         // Update is called once per frame
         void Update()
         {
-
+			CollisionRayCast ();
         }
 
         public void RotateCueStick(float deg)
@@ -28,6 +28,28 @@ namespace CPG
             Vector3 cueBallTranform = cueBall.transform.position;
             transform.RotateAround(cueBallTranform, ROTATION_AXIS, deg);
         }
+
+		void CollisionRayCast ()
+		{
+			RaycastHit hit;
+
+			Vector3 dir = cueBall.transform.position - transform.position;
+			dir = new Vector3 (dir.x, 0, dir.z);
+			// Cast a sphere wrapping character controller 10 meters forward
+			// to see if it is about to hit anything.
+			Debug.DrawRay(cueBall.transform.position, dir);
+
+			LineRenderer lr = GetComponent<LineRenderer> ();
+			lr.material = new Material (Shader.Find ("Particles/Alpha Blended Premultiply"));
+			lr.SetPosition (0, cueBall.transform.position);
+			lr.SetPosition (1, dir * 10);
+
+			if (Physics.Raycast(cueBall.transform.position, dir, out hit)) {
+//				if (hit.collider.gameObject.tag == "Ball") {
+					
+//				}
+			}
+		}
 
         public void Shoot(float power)
         {

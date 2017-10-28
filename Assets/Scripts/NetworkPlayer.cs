@@ -133,8 +133,9 @@ namespace CPG
 
         public void UpdateTimeDisplay(float curtime)
         {
-            GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = "Player " +
-                (CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " + Mathf.Round(curtime).ToString();
+			GameObject timerText = GameObject.FindWithTag ("Timer");
+			Text timer = timerText.GetComponent<Text> ();
+			timer.text = (CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " + Mathf.Round(curtime).ToString();
         }
     }
 }
