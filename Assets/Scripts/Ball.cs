@@ -6,6 +6,8 @@ namespace CPG
 {
 
 	public enum BallType{
+		NONE,
+		CUE,
 		SOLID,
 		STRIPE
 	}

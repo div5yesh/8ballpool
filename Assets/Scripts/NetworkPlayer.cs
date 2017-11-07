@@ -13,7 +13,12 @@ namespace CPG
         public bool isTurn = false;
 
         [SyncVar(hook = "UpdateTimeDisplay")]
-        public float time = 15;
+        public float time = 30;
+
+		[SyncVar(hook = "OnBallType")]
+		BallType btype = BallType.NONE;
+
+		SyncListInt potted = new SyncListInt ();
 
         public CueManager cueManager;
 
@@ -49,6 +54,8 @@ namespace CPG
             StartPlayer();
 
             CPG.NetworkManager.Instance.RegisterNetworkPlayer(this);
+
+			potted.Callback = OnIntChanged;
         }
 
         public override void OnStartLocalPlayer()
@@ -137,5 +144,15 @@ namespace CPG
 			Text timer = timerText.GetComponent<Text> ();
 			timer.text = (CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " + Mathf.Round(curtime).ToString();
         }
+
+		public void OnBallType(BallType type)
+		{
+			
+		}
+
+		void OnIntChanged(SyncListInt.Operation op, int index)
+		{
+			Debug.Log("list changed " + op);
+		}
     }
 }

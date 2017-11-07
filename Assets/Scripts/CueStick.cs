@@ -34,7 +34,7 @@ namespace CPG
 			RaycastHit hit;
 
 			Vector3 dir = cueBall.transform.position - transform.position;
-			dir = new Vector3 (dir.x, 0, dir.z);
+			dir = new Vector3 (dir.x, 0.2f, dir.z);
 			// Cast a sphere wrapping character controller 10 meters forward
 			// to see if it is about to hit anything.
 			Debug.DrawRay(cueBall.transform.position, dir);
@@ -42,7 +42,7 @@ namespace CPG
 			LineRenderer lr = GetComponent<LineRenderer> ();
 			lr.material = new Material (Shader.Find ("Particles/Alpha Blended Premultiply"));
 			lr.SetPosition (0, cueBall.transform.position);
-			lr.SetPosition (1, dir * 10);
+			lr.SetPosition (1, dir * 100);
 
 			if (Physics.Raycast(cueBall.transform.position, dir, out hit)) {
 //				if (hit.collider.gameObject.tag == "Ball") {

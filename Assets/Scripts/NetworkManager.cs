@@ -71,7 +71,7 @@ namespace CPG
         // Update is called once per frame
         void Update()
         {
-            if (GameState == GameState.STOP && players.Count == 2)
+            if (GameState == GameState.STOP && players.Count > 0)
             {
                 CheckPlayersReady();
             }
