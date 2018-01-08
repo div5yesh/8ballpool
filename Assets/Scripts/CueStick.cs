@@ -64,9 +64,8 @@ namespace CPG
 			{
 				cueBall = GameObject.FindGameObjectWithTag("CueBall");  
 			}
-			{
-				cueBall.transform.position.Set (v.x, cueBall.transform.position.y, v.z);
-			}
+
+			cueBall.transform.position = new Vector3(v.x, cueBall.transform.position.y, v.z);
 		}
 
         public void Shoot(float power)
