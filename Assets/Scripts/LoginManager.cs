@@ -15,17 +15,17 @@ namespace CPG
     public class LoginManager : MonoBehaviour
     {
 
-        public static LoginManager Instance;
+//        public static LoginManager Instance;
 
 		public static User UserData;
 
-        private void Awake()
-        {
-            if (!Instance)
-            {
-                Instance = this;
-            }
-        }
+//        private void Awake()
+//        {
+//            if (!Instance)
+//            {
+//                Instance = this;
+//            }
+//        }
 
         private void Start()
         {
@@ -97,7 +97,7 @@ namespace CPG
 
 		public void OnGoogleLoginClicked()
 		{
-
+			SceneManager.LoadScene("LobbyScene");
 		}
 
 		private void GoToLobby()

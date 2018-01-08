@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Exp = UnityEngine.Experimental.UIElements;
 
 namespace CPG
 {
     public enum PlayerAction
     {
         SHOOT,
-        ROTATE
+        ROTATE,
+		MOVECUEBALL,
+		PLACECUEBALL
     }
 
     public class PlayerControls : MonoBehaviour
@@ -16,6 +19,9 @@ namespace CPG
 
         public delegate void PlayerInputCallback(PlayerAction action, float deg);
         public event PlayerInputCallback OnPlayerInput;
+
+		public delegate void FoulCallback(PlayerAction action, Vector3 deg);
+		public event FoulCallback OnFoulInput;
 
         public bool isLocalPlayer = false;
 
@@ -44,7 +50,6 @@ namespace CPG
                 Touch touch = Input.GetTouch(0);
                 if (touch.phase == TouchPhase.Moved)
                 {
-                    GameObject.FindWithTag("Timer").GetComponent<TextMesh>().text = touch.deltaPosition.ToString();
                     rotation = touch.deltaPosition.x * Time.deltaTime * 15;
                     OnPlayerInput(PlayerAction.ROTATE, rotation);
                 }
@@ -57,7 +62,26 @@ namespace CPG
                     OnPlayerInput(PlayerAction.ROTATE, rotation);
                 }
             }
+			BallInHand ();
         }
+
+		public void BallInHand()
+		{
+			if (Application.platform == RuntimePlatform.Android)
+			{
+				Touch touch = Input.GetTouch(0);
+				if (touch.phase == TouchPhase.Moved)
+				{
+					Vector3 p = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, Camera.main.nearClipPlane));
+					OnFoulInput(PlayerAction.MOVECUEBALL, p);
+				}
+			}
+			else
+			{
+				Vector3 p = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y));
+				OnFoulInput(PlayerAction.MOVECUEBALL, p);
+			}
+		}
 
         public void OnShoot()
         {

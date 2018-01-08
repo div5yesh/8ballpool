@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 using UnityEngine.Networking.Match;
 using UnityEngine.Networking.Types;
 using UnityEngine.SceneManagement;
+using UnityEngine.Experimental.UIElements;
 
 namespace CPG
 {
@@ -16,7 +17,9 @@ namespace CPG
         PAUSE,
         WAITING,
         TURN,
-        SHOOTING
+        SHOOTING,
+		POT,
+		FOUL
     }
 
     public class NetworkManager : UnityEngine.Networking.NetworkManager
@@ -73,7 +76,9 @@ namespace CPG
         {
             if (GameState == GameState.STOP && players.Count > 0)
             {
-                CheckPlayersReady();
+				if (CheckPlayersReady ()) {
+					GameManager.Instance.waiting.SetActive (false);
+				}
             }
         }
 
@@ -82,7 +87,6 @@ namespace CPG
             if(state == GameState.SHOOTING)
             {
                 StartCoroutine(WaitAndCheckForTableSleep());
-
             }
         }
 
@@ -95,12 +99,24 @@ namespace CPG
             }
             else
             {
+				if (GameState == GameState.POT) 
+				{
+					ReTurn ();
+				} 
+				else if (GameState == GameState.FOUL) 
+				{
+					FoulTurn ();
+				}
+				else
+				{
+					AlterTurns();
+				}
+
                 GameState = GameState.TURN;
-                AlterTurns();
             }
         }
 
-        void CheckPlayersReady()
+        bool CheckPlayersReady()
         {
             bool playersReady = true;
             foreach (var player in players)
@@ -113,7 +129,14 @@ namespace CPG
                 GameState = GameState.START;
                 players[iActivePlayer].StartGame();
             }
+
+			return playersReady;
         }
+
+		public void ReTurn()
+		{
+			players[iActivePlayer].TurnStart();
+		}
 
         public void AlterTurns()
         {
@@ -121,6 +144,16 @@ namespace CPG
             iActivePlayer = (iActivePlayer + 1) % players.Count;
             players[iActivePlayer].TurnStart();
         }
+
+		public void FoulTurn()
+		{
+
+		}
+
+		public void UpdateScore(int ball, BallType type)
+		{
+			players [ActivePlayer].UpdateScore (ball, type);
+		}
 
         public void RegisterNetworkPlayer(NetworkPlayer player)
         {
@@ -155,8 +188,8 @@ namespace CPG
             Debug.Log("Matches:" + matches.Count);
             if (success && matches.Count > 0)
             {
-                Debug.Log(matches[0].name+matches[0].networkId);
                 id = matches[0].networkId.ToString();
+				Debug.Log(id);
                 matchMaker.JoinMatch(matches[0].networkId, string.Empty, string.Empty, string.Empty, 0, 0, OnMatchJoined);
             }
             else

@@ -24,7 +24,6 @@ namespace CPG
         // Use this for initialization
         void Start()
         {
-            cueBall = GameObject.FindGameObjectWithTag("CueBall").GetComponent<Rigidbody>();
         }
 
         // Update is called once per frame
@@ -35,6 +34,7 @@ namespace CPG
 
         void UpdateActiveTableObjects()
         {
+			cueBall = GameObject.FindGameObjectWithTag("CueBall").GetComponent<Rigidbody>();
             balls = GameObject.FindGameObjectsWithTag("Ball");
         }
 

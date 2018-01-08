@@ -89,10 +89,10 @@ namespace CPG
 
 		public void OnLogoutClicked()
 		{
-			if (FB.IsLoggedIn) 
+			//if (FB.IsLoggedIn) 
 			{
-				FB.LogOut ();
 				SceneManager.LoadScene("LoginScene");
+				FB.LogOut ();
 			}
 		}
 	}

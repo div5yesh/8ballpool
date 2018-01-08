@@ -13,7 +13,7 @@ namespace CPG
         public bool isTurn = false;
 
         [SyncVar(hook = "UpdateTimeDisplay")]
-        public float time = 30;
+        public float time = 100;
 
 		[SyncVar(hook = "OnBallType")]
 		BallType btype = BallType.NONE;
@@ -28,7 +28,8 @@ namespace CPG
         // Use this for initialization
         void Start()
         {
-            cueManager.playerInput.OnPlayerInput += OnPlayerInput;
+			cueManager.playerInput.OnPlayerInput += OnPlayerInput;
+			cueManager.playerInput.OnFoulInput += OnFoulInput;
         }
 
         // Update is called once per frame
@@ -79,7 +80,7 @@ namespace CPG
         public void TurnStart()
         {
             isTurn = true;
-            time = 15;
+            time = 90;
             RpcTurnStart();
         }
 
@@ -117,6 +118,25 @@ namespace CPG
             }
         }
 
+		public void UpdateScore(int ball, BallType type)
+		{
+			if (potted.Count == 0) 
+			{
+				btype = type;
+			}
+
+			if(type == BallType.CUE){
+				// foul
+			}
+			else if (btype == type) {
+				potted.Add (ball);
+				// player turn reset
+			} else {
+				// other player's pot
+				// foul
+			}
+		}
+
         void OnPlayerInput(PlayerAction action, float amount)
         {
             //TODO: also check for localplayer while just shooting, as rotation has player authority
@@ -131,6 +151,21 @@ namespace CPG
             }
         }
 
+		void OnFoulInput(PlayerAction action, Vector3 v)
+		{
+			if (action == PlayerAction.MOVECUEBALL)
+			{
+				CmdOnFoulInput(action, v);
+			}
+		}
+
+		[Command]
+		void CmdOnFoulInput(PlayerAction action, Vector3 v)
+		{
+			Debug.Log ("player "+v);
+			cueManager.cueStick.MoveCueBall (v);
+		}
+
         [Command]
         void CmdOnPlayerInput(PlayerAction action, float amount)
         {
@@ -142,17 +177,18 @@ namespace CPG
         {
 			GameObject timerText = GameObject.FindWithTag ("Timer");
 			Text timer = timerText.GetComponent<Text> ();
-			timer.text = (CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " + Mathf.Round(curtime).ToString();
+			timer.text = /*(CPG.NetworkManager.Instance.ActivePlayer + 1) + ": " +*/ Mathf.Round(curtime).ToString();
         }
 
 		public void OnBallType(BallType type)
 		{
-			
+			// assign to other player
+			// NetworkManager.Instance.AssignBallType();
 		}
 
 		void OnIntChanged(SyncListInt.Operation op, int index)
 		{
-			Debug.Log("list changed " + op);
+			Debug.Log("List changed " + potted.ToString());
 		}
     }
 }
