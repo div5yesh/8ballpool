@@ -44,7 +44,7 @@ namespace CPG
             cueStick.Unspawn();
             if (isLocalPlayer)
             {
-                playerInput.DisableControls(); 
+                playerInput.DisableControls(false); 
             }
         }
     } 

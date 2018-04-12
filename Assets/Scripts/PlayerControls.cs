@@ -45,9 +45,14 @@ namespace CPG
                 return;
             }
 
-			RotateCue ();
+//			Debug.Log ("GameState::" + NetworkManager.Instance.GameState);
+			//if (NetworkManager.Instance.GameState == GameState.TURN) {
+				RotateCue ();
+			//}
             
-			BallInHand ();
+			if (NetworkManager.Instance.GameState == GameState.FOUL) {
+				BallInHand ();
+			}
         }
 
 		public void RotateCue()
@@ -88,12 +93,16 @@ namespace CPG
 						if (Physics.Raycast (ray, out hit, 100)) {
 							if (hit.collider.gameObject.tag == "CueBall") {
 								bInputDown = true;
+								DisableControls (true);
 							}
 						}
 					}
 
 					if (touch.phase == TouchPhase.Canceled) {
 						bInputDown = false;
+						dest = Camera.main.ScreenToWorldPoint (new Vector3 (touch.position.x, touch.position.y, Camera.main.nearClipPlane));
+						OnFoulInput (PlayerAction.PLACECUEBALL, dest);
+						EnableControls ();
 					}
 
 					if (bInputDown) {
@@ -111,12 +120,16 @@ namespace CPG
 					if (Physics.Raycast (ray, out hit, 100)) {
 						if (hit.collider.gameObject.tag == "CueBall") {
 							bInputDown = true;
+							DisableControls (true);
 						}
 					}
 				}
 
 				if (Input.GetMouseButtonUp (0)) {
 					bInputDown = false;
+					dest = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y));
+					OnFoulInput (PlayerAction.PLACECUEBALL, dest);
+					EnableControls ();
 				}
 
 				if (bInputDown) {
@@ -140,11 +153,16 @@ namespace CPG
 
         public void EnableControls()
         {
+			GetComponentInChildren<Slider> ().enabled = true;
             gameObject.SetActive(true);
         }
 
-        public void DisableControls()
+		public void DisableControls(bool bFoul)
         {
+			if (bFoul) {
+				GetComponentInChildren<Slider> ().enabled = false;
+				return;
+			}
             gameObject.SetActive(false);
         }
     } 

@@ -101,14 +101,19 @@ namespace CPG
             {
 				if (GameState == GameState.POT) 
 				{
+					//show turn
 					ReTurn ();
 				} 
 				else if (GameState == GameState.FOUL) 
 				{
-					FoulTurn ();
+					//create cue ball
+
+					//show turn
+					AlterTurns();
 				}
 				else
 				{
+					//show turn
 					AlterTurns();
 				}
 
@@ -135,11 +140,14 @@ namespace CPG
 
 		public void ReTurn()
 		{
+			Debug.Log ("turn::"+iActivePlayer);
 			players[iActivePlayer].TurnStart();
 		}
 
         public void AlterTurns()
         {
+			Debug.Log ("turn::"+iActivePlayer);
+
             players[iActivePlayer].TurnEnd();
             iActivePlayer = (iActivePlayer + 1) % players.Count;
             players[iActivePlayer].TurnStart();
@@ -147,7 +155,7 @@ namespace CPG
 
 		public void FoulTurn()
 		{
-
+			eGameState = GameState.FOUL;
 		}
 
 		public void UpdateScore(int ball, BallType type)

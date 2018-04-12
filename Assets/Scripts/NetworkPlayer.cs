@@ -125,8 +125,10 @@ namespace CPG
 				btype = type;
 			}
 
+			Debug.Log ("score:"+type);
+
 			if(type == BallType.CUE){
-				// foul
+				NetworkManager.Instance.FoulTurn ();
 			}
 			else if (btype == type) {
 				potted.Add (ball);
@@ -153,7 +155,7 @@ namespace CPG
 
 		void OnFoulInput(PlayerAction action, Vector3 v)
 		{
-			if (action == PlayerAction.MOVECUEBALL)
+			//if (action == PlayerAction.MOVECUEBALL)
 			{
 				CmdOnFoulInput(action, v);
 			}
@@ -162,14 +164,20 @@ namespace CPG
 		[Command]
 		void CmdOnFoulInput(PlayerAction action, Vector3 v)
 		{
-			Debug.Log ("player "+v);
-			cueManager.cueStick.MoveCueBall (v);
+			Debug.Log ("player " + action);
+			if (action == PlayerAction.MOVECUEBALL) {
+				Debug.Log ("player " + v);
+				cueManager.cueStick.MoveCueBall (v);
+			} else {
+				Debug.Log ("turn");
+				cueManager.cueStick.Spawn ();
+			}
 		}
 
         [Command]
         void CmdOnPlayerInput(PlayerAction action, float amount)
         {
-            cueManager.playerInput.DisableControls();
+			cueManager.playerInput.DisableControls(false);
             cueManager.cueStick.Shoot(amount);
         }
 

@@ -7,31 +7,6 @@ using Facebook.Unity;
 
 namespace CPG
 {
-//	public class Dialog
-//	{
-//		public string title;
-//		public string text;
-//		public List<Button> buttons = new List<Button> ();
-//
-//		public Dialog(string title)
-//		{
-//			this.title = title;
-//		}
-//
-//		public void AddButtons(Button[] b)
-//		{
-//			buttons.AddRange (b);
-//		}
-//	}
-//
-//	public class DialogManager
-//	{
-//		public void AddDialog(Dialog d)
-//		{
-//			
-//		}
-//	}
-
     public class GameManager : MonoBehaviour
     {
 
